@@ -1,60 +1,44 @@
-const express = require('express');
+const program = require('commander');
 const path = require('path');
 const fs = require('fs');
-const cors = require('cors');
-const multer = require('multer');
 const { generateBadges } = require('node-jest-badges');
 
-const PORT = process.env.PORT || 3000;
-const app = express();
-const baseBadgesPathByProject = path.join(__dirname, './badgesByProject');
-
-var storage = multer.diskStorage(
-  {
-      destination: './coverage/',
-      filename: function ( req, file, cb ) {
-          //req.body is empty...
-          //How could I get the new_file_name property sent from client here?
-          cb( null, file.originalname);
-      }
-  }
-);
-const upload = multer({ storage: storage });
-
-app.use(express.json());
-app.use(express.urlencoded({
-  extended: true
-}));
-app.use(express.static(baseBadgesPathByProject));
-
-app.post('/coverageBadge/:project', upload.single('report'), (req, res) => {
-  const projectName = req.params.project;
-  generateBadges().then(() =>{
+program
+  .command('createBadges <project>')
+  .description('...Creating Badges')
+  .action(async (command) => {
     const baseBadgesPathOrigin = path.join(__dirname, './badges');
+    const baseBadgesPathByProject = path.join(__dirname, `./badgesByProject/${command}`);
+
+    generateBadges().then(() =>{
+      
+      if (!fs.existsSync(baseBadgesPathByProject)) {
+        fs.mkdirSync(baseBadgesPathByProject);
+      }
+      if (!fs.existsSync(baseBadgesPathByProject)) {
+        fs.mkdirSync(baseBadgesPathByProject);
+      }
     
-    if(!fs.existsSync(`${baseBadgesPathByProject}/`)) {
-      fs.mkdirSync(`${baseBadgesPathByProject}/`);
-    }
-    if(!fs.existsSync(`${baseBadgesPathByProject}/${projectName}/`)) {
-      fs.mkdirSync(`${baseBadgesPathByProject}/${projectName}/`);
-    }
+      const filesExisted = fs.readdirSync(baseBadgesPathByProject);
+      if (filesExisted.length) {
+        filesExisted.forEach((file) => fs.unlinkSync(`${baseBadgesPathByProject}/${file}`));
+      }
 
-    fs.rename((`${baseBadgesPathOrigin}/`),`${baseBadgesPathByProject}/${projectName}/`, (error) => {
+      fs.rename((baseBadgesPathOrigin), baseBadgesPathByProject, (error) => {
+        if (error) throw new Error(error);
+
+        console.log('Badges Created!');
+        console.log('Source');
+        fs.readdirSync(baseBadgesPathByProject).forEach((file) => {
+          console.log(`${command}/${file}`);
+        });
+
+      });
+    })
+    .catch((error) => {
+      console.error(error);
     });
-    res.status(200);
-    res.json({
-      status: 200
-    })
-  })
-  .catch((error) => {
-    res.status(500);
-    res.json({
-      message: error,
-      status: 500
-    })
-  })
-})
+  });
 
-app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
-});
+program.parse(process.argv);
+
