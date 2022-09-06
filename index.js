@@ -21,7 +21,6 @@ var storage = multer.diskStorage(
 );
 const upload = multer({ storage: storage });
 
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
@@ -40,15 +39,7 @@ app.post('/coverageBadge/:project', upload.single('report'), (req, res) => {
       fs.mkdirSync(`${baseBadgesPathByProject}/${projectName}/`);
     }
 
-    fs.rename((`${baseBadgesPathOrigin}/coverage-branches.svg`),`${baseBadgesPathByProject}/${projectName}/coverage-branches.svg`, (error) => {
-    });
-    fs.rename((`${baseBadgesPathOrigin}/coverage-functions.svg`),`${baseBadgesPathByProject}/${projectName}/coverage-functions.svg`, (error) => {
-    });
-    fs.rename((`${baseBadgesPathOrigin}/coverage-jest coverage.svg`),`${baseBadgesPathByProject}/${projectName}/coverage-jest coverage.svg`, (error) => {
-    });
-    fs.rename((`${baseBadgesPathOrigin}/coverage-lines.svg`),`${baseBadgesPathByProject}/${projectName}/coverage-lines.svg`, (error) => {
-    });
-    fs.rename((`${baseBadgesPathOrigin}/coverage-statements.svg`),`${baseBadgesPathByProject}/${projectName}/coverage-statements.svg`, (error) => {
+    fs.rename((`${baseBadgesPathOrigin}/`),`${baseBadgesPathByProject}/${projectName}/`, (error) => {
     });
     res.status(200);
     res.json({
